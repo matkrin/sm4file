@@ -1,0 +1,29 @@
+[tool.poetry]
+name = "sm4file"
+version = "0.1.0"
+description = "Python package to read .sm4 files"
+authors = ["matkrin <matkrin@protonmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+
+
+[tool.poetry.group.dev.dependencies]
+black = "^23.9.1"
+pytest = "^7.4.2"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.black]
+line-length = 79
+preview = true
+
+[tool.mypy]
+show_error_codes = true
