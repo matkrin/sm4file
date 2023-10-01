@@ -34,6 +34,9 @@ class Cursor:
     def read_i32_le(self) -> int:
         return struct.unpack("<i", self._buffer.read(4))[0]
 
+    def read_u64_le(self) -> int:
+        return struct.unpack("<q", self._buffer.read(8))[0]
+
     def read_f32_le(self) -> int:
         return struct.unpack("<f", self._buffer.read(4))[0]
 
