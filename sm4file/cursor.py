@@ -12,6 +12,9 @@ class Cursor:
     def skip(self, bytes_to_skip):
         self.set_position(self._buffer.tell() + bytes_to_skip)
 
+    def read(self, num_bytes) -> bytes:
+        return self._buffer.read(num_bytes)
+
     def read_string(self, str_len: int) -> str:
         """Read bytes as string from _bytes with str_len"""
         return "".join([chr(i) for i in self._buffer.read(str_len)])
