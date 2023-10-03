@@ -6,7 +6,7 @@ import zlib
 import numpy as np
 from numpy._typing import NDArray
 
-from cursor import Cursor
+from .cursor import Cursor
 
 if TYPE_CHECKING:
     from sm4file.sm4file import RhkDriftOptionType
@@ -17,12 +17,15 @@ class PageData:
     data: NDArray[np.float32]
 
     @classmethod
-    def from_buffer(cls, cursor: Cursor, offset: int, size: int, z_scale: float, z_offset: float) -> PageData:
-        cursor.set_position(offset)
+    def from_buffer(
+        cls, cursor: Cursor, size: int, z_scale: float, z_offset: float
+    ) -> PageData:
+        # cursor.set_position(offset)
 
-        data = np.frombuffer(cursor.read(size), dtype=np.int32)
-        data = data * z_scale + z_offset
+        raw_data = np.frombuffer(cursor.read(size), dtype=np.int32)
+        data: NDArray[np.float32] = raw_data * z_scale + z_offset
         return cls(data)
+
 
 @dataclass
 class ImageDriftHeader:
@@ -30,11 +33,10 @@ class ImageDriftHeader:
     imagedrift_drift_option_type: RhkDriftOptionType
 
     @classmethod
-    def from_buffer(cls, cursor: Cursor, offset: int) -> ImageDriftHeader:
-        cursor.set_position(offset)
-
+    def from_buffer(cls, cursor: Cursor) -> ImageDriftHeader:
         imagedrift_filetime = cursor.read_u64_le()
         imagedrift_drift_option_type = RhkDriftOptionType(cursor.read_u32_le())
+
         return cls(imagedrift_filetime, imagedrift_drift_option_type)
 
 
@@ -49,9 +51,7 @@ class ImageDriftData:
     imagedrift_vector_y: int
 
     @classmethod
-    def from_buffer(cls, cursor: Cursor, offset: int) -> ImageDriftData:
-        cursor.set_position(offset)
-
+    def from_buffer(cls, cursor: Cursor) -> ImageDriftData:
         imagedrift_time = cursor.read_u32_le()
         imagedrift_dx = cursor.read_u32_le()
         imagedrift_dy = cursor.read_u32_le()
@@ -59,6 +59,7 @@ class ImageDriftData:
         imagedrift_cumulative_y = cursor.read_u32_le()
         imagedrift_vector_x = cursor.read_u32_le()
         imagedrift_vector_y = cursor.read_u32_le()
+
         return cls(
             imagedrift_time,
             imagedrift_dx,
@@ -78,8 +79,7 @@ class SpecDriftHeader:
     specdrift_channel: str
 
     @classmethod
-    def from_buffer(cls, cursor: Cursor, offset: int) -> SpecDriftHeader:
-        cursor.set_position(offset)
+    def from_buffer(cls, cursor: Cursor) -> SpecDriftHeader:
         # unix epoch
         specdrift_filetime = cursor.read_u64_le()
         specdrift_drift_option_type = cursor.read_u32_le()
@@ -114,18 +114,14 @@ class SpecDriftData:
     specdrift_cumulative_y: List[float]
 
     @classmethod
-    def from_buffer(
-        cls, cursor: Cursor, offset: int, y_size: int
-    ) -> SpecDriftData:
-        cursor.set_position(offset)
-
-        specdrift_time = []
-        specdrift_x_coord = []
-        specdrift_y_coord = []
-        specdrift_dx = []
-        specdrift_dy = []
-        specdrift_cumulative_x = []
-        specdrift_cumulative_y = []
+    def from_buffer(cls, cursor: Cursor, y_size: int) -> SpecDriftData:
+        specdrift_time: List[float] = []
+        specdrift_x_coord: List[float] = []
+        specdrift_y_coord: List[float] = []
+        specdrift_dx: List[float] = []
+        specdrift_dy: List[float] = []
+        specdrift_cumulative_x: List[float] = []
+        specdrift_cumulative_y: List[float] = []
 
         for _ in range(y_size):
             specdrift_time.append(cursor.read_f32_le())
@@ -170,11 +166,7 @@ class StringData:
     channel_list: str
 
     @classmethod
-    def from_buffer(
-        cls, cursor: Cursor, offset: int, count: int
-    ) -> StringData:
-        cursor.set_position(offset)
-
+    def from_buffer(cls, cursor: Cursor, count: int) -> StringData:
         label = cursor.read_sm4_string()
         system_text = cursor.read_sm4_string()
         session_text = cursor.read_sm4_string()
@@ -230,8 +222,7 @@ class TipTrackHeader:
     tiptrack_channel: str
 
     @classmethod
-    def from_buffer(cls, cursor: Cursor, offset: int) -> TipTrackHeader:
-        cursor.set_position(offset)
+    def from_buffer(cls, cursor: Cursor) -> TipTrackHeader:
         # unix epoch
         tiptrack_filetime = cursor.read_u64_le()
         tiptrack_feature_height = cursor.read_f32_le()
@@ -264,12 +255,12 @@ class TipTrackData:
 
     @classmethod
     def from_buffer(
-        cls, cursor: Cursor, offest: int, tiptrack_tiptrack_info_count: int
+        cls, cursor: Cursor, tiptrack_tiptrack_info_count: int
     ) -> TipTrackData:
-        tiptrack_cumulative_time = []
-        tiptrack_time = []
-        tiptrack_dx = []
-        tiptrack_dy = []
+        tiptrack_cumulative_time: List[float] = []
+        tiptrack_time: List[float] = []
+        tiptrack_dx: List[float] = []
+        tiptrack_dy: List[float] = []
 
         for _ in range(tiptrack_tiptrack_info_count):
             tiptrack_cumulative_time.append(cursor.read_f32_le())
@@ -288,7 +279,7 @@ class TipTrackData:
 @dataclass
 class Prm:
     @classmethod
-    def from_buffer(cls, cursor: Cursor, offset: int) -> Prm:
+    def from_buffer(cls, cursor: Cursor) -> Prm:
         return cls()
 
 
@@ -300,11 +291,7 @@ class PrmHeader:
     prm_data: str
 
     @classmethod
-    def from_buffer(
-        cls, cursor: Cursor, offset: int, prm_data_offset: int
-    ) -> PrmHeader:
-        cursor.set_position(offset)
-
+    def from_buffer(cls, cursor: Cursor, prm_data_offset: int) -> PrmHeader:
         prm_compression_flag = cursor.read_u32_le()
         prm_data_size = cursor.read_u32_le()
         prm_compression_size = cursor.read_u32_le()
@@ -312,15 +299,15 @@ class PrmHeader:
         # read the actual PRM data
         cursor.set_position(prm_data_offset)
         if prm_compression_flag == 0:
-            prm_data = cursor.read(prm_data_size)
+            prm_data_raw = cursor.read(prm_data_size)
         else:
-            prm_data = zlib.decompress(
+            prm_data_raw = zlib.decompress(
                 cursor.read(prm_compression_size),
                 wbits=0,
                 bufsize=prm_data_size,
             )
 
-        prm_data = prm_data.decode("CP437")
+        prm_data = prm_data_raw.decode("CP437")
 
         return cls(
             prm_compression_flag,
@@ -346,8 +333,7 @@ class ApiInfo:
     units: str
 
     @classmethod
-    def from_buffer(cls, cursor: Cursor, offset: int) -> ApiInfo:
-        cursor.set_position(offset)
+    def from_buffer(cls, cursor: Cursor) -> ApiInfo:
         voltage_high = cursor.read_f32_le()
         voltage_low = cursor.read_f32_le()
         gain = cursor.read_f32_le()
@@ -403,9 +389,7 @@ class PiezoSensitivity:
     actuator_calibration: str
 
     @classmethod
-    def from_buffer(cls, cursor: Cursor, offset: int) -> PiezoSensitivity:
-        cursor.set_position(offset)
-
+    def from_buffer(cls, cursor: Cursor) -> PiezoSensitivity:
         tube_x = cursor.read_f64_le()
         tube_y = cursor.read_f64_le()
         tube_z = cursor.read_f64_le()
@@ -468,9 +452,7 @@ class FrequencySweepData:
     q_factor_unit: str
 
     @classmethod
-    def from_buffer(cls, cursor: Cursor, offset: int) -> FrequencySweepData:
-        cursor.set_position(offset)
-
+    def from_buffer(cls, cursor: Cursor) -> FrequencySweepData:
         psd_total_signal = cursor.read_f64_le()
         peak_frequency = cursor.read_f64_le()
         peak_amplitude = cursor.read_f64_le()
@@ -511,8 +493,7 @@ class ScanProcessorInfo:
     y_slope_compensation_unit: str
 
     @classmethod
-    def from_buffer(cls, cursor: Cursor, offset: int) -> ScanProcessorInfo:
-        cursor.set_position(offset)
+    def from_buffer(cls, cursor: Cursor) -> ScanProcessorInfo:
         x_slope_compensation = cursor.read_f64_le()
         y_slope_compensation = cursor.read_f64_le()
         _ = cursor.read_u32_le()
@@ -559,8 +540,7 @@ class PllInfo:
     diss_pi_upper_bound_unit: str
 
     @classmethod
-    def from_buffer(cls, cursor: Cursor, offset: int) -> PllInfo:
-        cursor.set_position(offset)
+    def from_buffer(cls, cursor: Cursor) -> PllInfo:
         amplitude_control = cursor.read_u32_le()
         drive_amplitude = cursor.read_f64_le()
         drive_ref_frequency = cursor.read_f64_le()
@@ -637,9 +617,7 @@ class ChannelDriveInfo:
     harmonic_factor_unit: str
 
     @classmethod
-    def from_buffer(cls, cursor: Cursor, offset: int) -> ChannelDriveInfo:
-        cursor.set_position(offset)
-
+    def from_buffer(cls, cursor: Cursor) -> ChannelDriveInfo:
         _ = cursor.read_u32_le()
         master_osciallator = cursor.read_u32_le()
         amplitude = cursor.read_f64_le()
@@ -677,8 +655,7 @@ class LockinInfo:
     phase_unit: str
 
     @classmethod
-    def from_buffer(cls, cursor: Cursor, offset: int) -> LockinInfo:
-        cursor.set_position(offset)
+    def from_buffer(cls, cursor: Cursor) -> LockinInfo:
         num_strings = cursor.read_u32_le()
 
         non_master_oscillator = cursor.read_u32_le()
@@ -716,9 +693,7 @@ class PiControllerInfo:
     output_unit: str
 
     @classmethod
-    def from_buffer(cls, cursor: Cursor, offset: int) -> PiControllerInfo:
-        cursor.set_position(offset)
-
+    def from_buffer(cls, cursor: Cursor) -> PiControllerInfo:
         setpoint = cursor.read_f64_le()
         proportional_gain = cursor.read_f64_le()
         integral_gain = cursor.read_f64_le()
@@ -750,8 +725,7 @@ class LowpassFilterInfo:
     info: str
 
     @classmethod
-    def from_buffer(cls, cursor: Cursor, offset: int) -> LowpassFilterInfo:
-        cursor.set_position(offset)
+    def from_buffer(cls, cursor: Cursor) -> LowpassFilterInfo:
         _ = cursor.read_u32_le()
         lowpass_filter_info = cursor.read_sm4_string()
 
