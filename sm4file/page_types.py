@@ -1,5 +1,6 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, List
+from typing import List
+from enum import Enum
 from dataclasses import dataclass
 import zlib
 
@@ -8,8 +9,11 @@ from numpy._typing import NDArray
 
 from .cursor import Cursor
 
-if TYPE_CHECKING:
-    from sm4file.sm4file import RhkDriftOptionType
+
+class RhkDriftOptionType(Enum):
+    RHK_DRIFT_DISABLED = 0
+    RHK_DRIFT_EACH_SPECTRA = 1
+    RHK_DRIFT_EACH_LOCATION = 2
 
 
 @dataclass
@@ -167,46 +171,48 @@ class StringData:
 
     @classmethod
     def from_buffer(cls, cursor: Cursor, count: int) -> StringData:
-        label = cursor.read_sm4_string()
-        system_text = cursor.read_sm4_string()
-        session_text = cursor.read_sm4_string()
-        user_text = cursor.read_sm4_string()
-        filename = cursor.read_sm4_string()
-        date = cursor.read_sm4_string()
-        time = cursor.read_sm4_string()
-        x_units = cursor.read_sm4_string()
-        y_units = cursor.read_sm4_string()
-        z_units = cursor.read_sm4_string()
-        x_label = cursor.read_sm4_string()
-        y_label = cursor.read_sm4_string()
-        status_channel_text = cursor.read_sm4_string()
-        completed_line_count = cursor.read_sm4_string()
-        oversampling_count = cursor.read_sm4_string()
-        sliced_voltage = cursor.read_sm4_string()
-        pll_pro_status = cursor.read_sm4_string()
-        setpoint_unit = cursor.read_sm4_string()
-        channel_list = cursor.read_sm4_string()
+        for i in range(count):
+            print(cursor.read_sm4_string())
+        """ label = cursor.read_sm4_string() """
+        """ system_text = cursor.read_sm4_string() """
+        """ session_text = cursor.read_sm4_string() """
+        """ user_text = cursor.read_sm4_string() """
+        """ filename = cursor.read_sm4_string() """
+        """ date = cursor.read_sm4_string() """
+        """ time = cursor.read_sm4_string() """
+        """ x_units = cursor.read_sm4_string() """
+        """ y_units = cursor.read_sm4_string() """
+        """ z_units = cursor.read_sm4_string() """
+        """ x_label = cursor.read_sm4_string() """
+        """ y_label = cursor.read_sm4_string() """
+        """ status_channel_text = cursor.read_sm4_string() """
+        """ completed_line_count = cursor.read_sm4_string() """
+        """ oversampling_count = cursor.read_sm4_string() """
+        """ sliced_voltage = cursor.read_sm4_string() """
+        """ pll_pro_status = cursor.read_sm4_string() """
+        """ setpoint_unit = cursor.read_sm4_string() """
+        """ channel_list = cursor.read_sm4_string() """
 
         return cls(
-            label,
-            system_text,
-            session_text,
-            user_text,
-            filename,
-            date,
-            time,
-            x_units,
-            y_units,
-            z_units,
-            x_label,
-            y_label,
-            status_channel_text,
-            completed_line_count,
-            oversampling_count,
-            sliced_voltage,
-            pll_pro_status,
-            setpoint_unit,
-            channel_list,
+            label="",
+            system_text="",
+            session_text="",
+            user_text="",
+            filename="",
+            date="",
+            time="",
+            x_units="",
+            y_units="",
+            z_units="",
+            x_label="",
+            y_label="",
+            status_channel_text="",
+            completed_line_count="",
+            oversampling_count="",
+            sliced_voltage="",
+            pll_pro_status="",
+            setpoint_unit="",
+            channel_list="",
         )
 
 
@@ -278,26 +284,10 @@ class TipTrackData:
 
 @dataclass
 class Prm:
-    @classmethod
-    def from_buffer(cls, cursor: Cursor) -> Prm:
-        return cls()
-
-
-@dataclass
-class PrmHeader:
-    prm_compression_flag: int
-    prm_data_size: int
-    prm_compression_size: int
     prm_data: str
 
     @classmethod
-    def from_buffer(cls, cursor: Cursor, prm_data_offset: int) -> PrmHeader:
-        prm_compression_flag = cursor.read_u32_le()
-        prm_data_size = cursor.read_u32_le()
-        prm_compression_size = cursor.read_u32_le()
-
-        # read the actual PRM data
-        cursor.set_position(prm_data_offset)
+    def from_buffer(cls, cursor: Cursor, prm_compression_flag: int, prm_data_size: int, prm_compression_size: int) -> Prm:
         if prm_compression_flag == 0:
             prm_data_raw = cursor.read(prm_data_size)
         else:
@@ -308,12 +298,27 @@ class PrmHeader:
             )
 
         prm_data = prm_data_raw.decode("CP437")
+        return cls(prm_data)
+
+
+@dataclass
+class PrmHeader:
+    prm_compression_flag: int
+    prm_data_size: int
+    prm_compression_size: int
+
+    @classmethod
+    def from_buffer(cls, cursor: Cursor) -> PrmHeader:
+        prm_compression_flag = cursor.read_u32_le()
+        prm_data_size = cursor.read_u32_le()
+        prm_compression_size = cursor.read_u32_le()
+
+        # read the actual PRM data
 
         return cls(
             prm_compression_flag,
             prm_data_size,
             prm_compression_size,
-            prm_data,
         )
 
 

@@ -20,7 +20,8 @@ class Cursor:
         return "".join([chr(i) for i in self._buffer.read(str_len)])
 
     def read_sm4_string(self) -> str:
-        return self.read_string(self.read_u16_le())
+        length = self.read_u16_le()
+        return self.read_string(length)
 
     def read_u8_le(self) -> int:
         return struct.unpack("<B", self._buffer.read(1))[0]

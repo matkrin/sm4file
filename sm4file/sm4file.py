@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import List, Union, TypeAlias
+from typing import List, Union, TypeAlias, Optional
 from io import BufferedReader
 from dataclasses import dataclass, field
 from enum import Enum
@@ -10,6 +10,7 @@ from .page_types import (
     ImageDriftHeader,
     ImageDriftData,
     PageData,
+    Prm,
     SpecDriftData,
     SpecDriftHeader,
     StringData,
@@ -189,12 +190,6 @@ class RhkScanType(Enum):
     RHK_SCAN_DOWN = 3
 
 
-class RhkDriftOptionType(Enum):
-    RHK_DRIFT_DISABLED = 0
-    RHK_DRIFT_EACH_SPECTRA = 1
-    RHK_DRIFT_EACH_LOCATION = 2
-
-
 @dataclass
 class Sm4Object:
     obj_type: RhkObjectType
@@ -210,16 +205,20 @@ class Sm4Object:
 
 
 @dataclass
-class Sm4Header:
+class Sm4FileHeader:
+    """Its object_list contains PAGE_INDEX_ARRAY, PRM, PRM_HEADER"""
     size: int
     signature: str
     page_count: int
     object_list_count: int
     object_field_size: int
     object_list: List[Sm4Object]
+    page_index_header: Sm4PageIndexHeader = field(init=False)
+    prm_header: PrmHeader = field(init=False)
+    prm: Prm = field(init=False)
 
     @classmethod
-    def from_buffer(cls, cursor: Cursor) -> Sm4Header:
+    def from_buffer(cls, cursor: Cursor) -> Sm4FileHeader:
         size = cursor.read_u16_le()
         signature = cursor.read_string(36)
         page_count = cursor.read_u32_le()
@@ -229,9 +228,11 @@ class Sm4Header:
         _ = cursor.read_u32_le()
         _ = cursor.read_u32_le()
 
-        object_list = []
+        object_list: List[Sm4Object] = []
         for _ in range(object_list_count):
-            object_list.append(Sm4Object.from_buffer(cursor))
+            obj = Sm4Object.from_buffer(cursor)
+            """ print(obj) """
+            object_list.append(obj)
 
         return cls(
             size,
@@ -242,6 +243,30 @@ class Sm4Header:
             object_list,
         )
 
+    def read_objects(self, cursor: Cursor) -> None:
+        """Read PRM header first"""
+
+        self.read_prm_header(cursor)
+        if self.prm_header is None:
+            raise BufferError("No PRM header in file header")
+
+        for obj in self.object_list:
+
+            cursor.set_position(obj.offset)
+            if obj.obj_type == RhkObjectType.RHK_OBJECT_PAGE_INDEX_HEADER:
+
+                self.page_index_header = Sm4PageIndexHeader.from_buffer(cursor, obj.offset)
+
+            if obj.obj_type == RhkObjectType.RHK_OBJECT_PRM:
+                self.prm = Prm.from_buffer(cursor, self.prm_header.prm_compression_flag, self.prm_header.prm_data_size, self.prm_header.prm_compression_size)
+
+    def read_prm_header(self, cursor: Cursor) -> None:
+        for obj in self.object_list:
+            if obj.obj_type == RhkObjectType.RHK_OBJECT_PRM_HEADER:
+                cursor.set_position(obj.offset)
+                self.prm_header = PrmHeader.from_buffer(cursor)
+
+
 
 @dataclass
 class Sm4PageIndexHeader:
@@ -251,18 +276,7 @@ class Sm4PageIndexHeader:
     object_list: List[Sm4Object]
 
     @classmethod
-    def from_buffer(
-        cls, cursor: Cursor, header_object_list: List[Sm4Object]
-    ) -> Sm4PageIndexHeader:
-        offset = None
-        for obj in header_object_list:
-            if obj.obj_type == RhkObjectType.RHK_OBJECT_PAGE_INDEX_HEADER:
-                offset = obj.offset
-                break
-        if offset is None:
-            raise BufferError("No Page Index Header in Buffer")
-
-        cursor.set_position(offset)
+    def from_buffer( cls, cursor: Cursor, offset: int) -> Sm4PageIndexHeader:
         page_count = cursor.read_u32_le()
         object_list_count = cursor.read_u32_le()
         _reserved_1 = cursor.read_u32_le()  # pyright: ignore
@@ -275,6 +289,11 @@ class Sm4PageIndexHeader:
         return Sm4PageIndexHeader(
             offset, page_count, object_list_count, object_list
         )
+
+    def page_index_array_offset(self) -> Optional[int]:
+        for obj in self.object_list:
+            if obj.obj_type == RhkObjectType.RHK_OBJECT_PAGE_INDEX_ARRAY:
+                return obj.offset
 
 
 @dataclass
@@ -296,8 +315,10 @@ class Sm4PageHeaderSequential:
         data_info_size = cursor.read_u32_le()
         data_info_string_count = cursor.read_u32_le()
 
-        object_list = []
-        object_list.append(Sm4Object.from_buffer(cursor))
+        object_list: List[Sm4Object] = []
+        for _ in range(object_list_count):
+            object_list.append(Sm4Object.from_buffer(cursor))
+
         sequential_param_gain: List[float] = []
         sequential_param_label: List[str] = []
         sequential_param_unit: List[str] = []
@@ -350,6 +371,7 @@ class Sm4PageHeaderDefault:
     object_list_count: int
     _32_bit_data_flag: int
     object_list: List[Sm4Object]
+    additional_page_objects: List[PageObject] = field(default_factory=list)
 
     @classmethod
     def from_buffer(cls, cursor: Cursor) -> Sm4PageHeaderDefault:
@@ -397,7 +419,11 @@ class Sm4PageHeaderDefault:
         # reserved
         cursor.skip(63)
 
-        object_list = [Sm4Object.from_buffer(cursor)]
+        object_list: List[Sm4Object] = []
+        for _ in range(object_list_count):
+            obj = Sm4Object.from_buffer(cursor)
+            """ print("PageHeaderDefault : ", obj) """
+            object_list.append(obj)
 
         return Sm4PageHeaderDefault(
             string_count,
@@ -433,66 +459,13 @@ class Sm4PageHeaderDefault:
             object_list,
         )
 
-
-Sm4PageHeader: TypeAlias = Union[Sm4PageHeaderSequential, Sm4PageHeaderDefault]
-
-
-@dataclass
-class Sm4Page:
-    header: Sm4PageHeader = field(init=False)
-    data: PageData = field(init=False)
-    page_id: int
-    page_data_type: RhkPageDataType
-    page_source_type: RhkPageSourceType
-    object_list_count: int
-    minor_version: int
-    object_list: List[Sm4Object]
-    additional_page_objects: List[PageObject] = field(default_factory=list)
-
-    @classmethod
-    def from_buffer(cls, cursor: Cursor) -> Sm4Page:
-        page_id = cursor.read_u16_le()
-        cursor.skip(14)
-        page_data_type = RhkPageDataType(cursor.read_u32_le())
-        page_source_type = RhkPageSourceType(cursor.read_u32_le())
-        object_list_count = cursor.read_u32_le()
-        minor_version = cursor.read_u32_le()
-
-        object_list = []
-        for _ in range(object_list_count):
-            object_list.append(Sm4Object.from_buffer(cursor))
-
-        return cls(
-            page_id,
-            page_data_type,
-            page_source_type,
-            minor_version,
-            object_list_count,
-            object_list,
-        )
-
-    def add_header(self, header: Sm4PageHeader) -> None:
-        self.header = header
-
-    def read_data(self, cursor: Cursor) -> None:
+    def read_data(self, cursor) -> None:
         tiptrack_info_count = None
         for obj in self.object_list:
-            if (
-                obj.offset != 0
-                and obj.size != 0
-                and isinstance(self.header, Sm4PageHeaderDefault)
-            ):
+            if ( obj.offset != 0 and obj.size != 0):
                 cursor.set_position(obj.offset)
 
-                if obj.obj_type == RhkObjectType.RHK_OBJECT_PAGE_DATA:
-                    self.data = PageData.from_buffer(
-                        cursor,
-                        obj.size,
-                        self.header.z_scale,
-                        self.header.z_offset,
-                    )
-
-                elif (
+                if (
                     obj.obj_type == RhkObjectType.RHK_OBJECT_IMAGE_DRIFT_HEADER
                 ):
                     self.additional_page_objects.append(
@@ -513,7 +486,7 @@ class Sm4Page:
 
                 elif obj.obj_type == RhkObjectType.RHK_OBJECT_SPEC_DRIFT_DATA:
                     self.additional_page_objects.append(
-                        SpecDriftData.from_buffer(cursor, self.header.y_size)
+                        SpecDriftData.from_buffer(cursor, self.y_size)
                     )
 
                 elif obj.obj_type == RhkObjectType.RHK_OBJECT_COLOR_INFO:
@@ -522,7 +495,7 @@ class Sm4Page:
                 elif obj.obj_type == RhkObjectType.RHK_OBJECT_STRING_DATA:
                     self.additional_page_objects.append(
                         StringData.from_buffer(
-                            cursor, self.header.string_count
+                            cursor, self.string_count
                         )
                     )
 
@@ -531,7 +504,7 @@ class Sm4Page:
                     tiptrack_info_count = read_obj.tiptrack_tiptrack_info_count
                     self.additional_page_objects.append(read_obj)
 
-                elif obj.obj_type == RhkObjectType.RHK_OBJECT_TIP_TRACK_HEADER:
+                elif obj.obj_type == RhkObjectType.RHK_OBJECT_TIP_TRACK_DATA:
                     if tiptrack_info_count is not None:
                         self.additional_page_objects.append(
                             TipTrackData.from_buffer(
@@ -541,21 +514,10 @@ class Sm4Page:
                     else:
                         raise ValueError("tiptrack_info_count not found")
 
-                elif obj.obj_type == RhkObjectType.RHK_OBJECT_PRM:
-                    pass
 
                 elif obj.obj_type == RhkObjectType.RHK_OBJECT_THUMBNAIL:
                     pass
 
-                elif obj.obj_type == RhkObjectType.RHK_OBJECT_PRM_HEADER:
-                    prm_data_offset = None
-                    for i in self.header.object_list:
-                        if i.obj_type == RhkObjectType.RHK_OBJECT_PRM:
-                            prm_data_offset = i.offset
-                            self.additional_page_objects.append(
-                                PrmHeader.from_buffer(cursor, prm_data_offset)
-                            )
-                            break
 
                 elif obj.obj_type == RhkObjectType.RHK_OBJECT_THUMBNAIL_HEADER:
                     pass
@@ -648,6 +610,74 @@ class Sm4Page:
                     )
 
 
+Sm4PageHeader: TypeAlias = Union[Sm4PageHeaderSequential, Sm4PageHeaderDefault]
+
+
+@dataclass
+class Sm4Page:
+    """Its object_list contains PAGE_HEADER, PAGE_DATA, THUMBNAIL and
+        THUMBNAIL_HEADER
+    """
+    header: Sm4PageHeader = field(init=False)
+    data: PageData = field(init=False)
+    page_id: int
+    page_data_type: RhkPageDataType
+    page_source_type: RhkPageSourceType
+    object_list_count: int
+    minor_version: int
+    object_list: List[Sm4Object]
+    additional_page_objects: List[PageObject] = field(default_factory=list)
+
+    @classmethod
+    def from_buffer(cls, cursor: Cursor) -> Sm4Page:
+        page_id = cursor.read_u16_le()
+        cursor.skip(14)
+        page_data_type = RhkPageDataType(cursor.read_u32_le())
+        page_source_type = RhkPageSourceType(cursor.read_u32_le())
+        object_list_count = cursor.read_u32_le()
+        minor_version = cursor.read_u32_le()
+
+        object_list = []
+        for _ in range(object_list_count):
+            object_list.append(Sm4Object.from_buffer(cursor))
+
+        return cls(
+            page_id,
+            page_data_type,
+            page_source_type,
+            minor_version,
+            object_list_count,
+            object_list,
+        )
+
+    def add_header(self, header: Sm4PageHeader) -> None:
+        self.header = header
+
+    def read_data(self, cursor: Cursor) -> None:
+        tiptrack_info_count = None
+        for obj in self.object_list:
+            if (
+                obj.offset != 0
+                and obj.size != 0
+                and isinstance(self.header, Sm4PageHeaderDefault)
+            ):
+                cursor.set_position(obj.offset)
+
+                if obj.obj_type == RhkObjectType.RHK_OBJECT_PAGE_DATA:
+                    self.data = PageData.from_buffer(
+                        cursor,
+                        obj.size,
+                        self.header.z_scale,
+                        self.header.z_offset,
+                    )
+
+                elif obj.obj_type == RhkObjectType.RHK_OBJECT_THUMBNAIL:
+                    pass
+
+                elif obj.obj_type == RhkObjectType.RHK_OBJECT_THUMBNAIL_HEADER:
+                    pass
+
+
 class Sm4File:
     def __init__(self, filepath: str):
         self.filepath = filepath
@@ -656,19 +686,11 @@ class Sm4File:
 
     def _read_sm4_file(self, f: BufferedReader):
         cursor = Cursor(f)
-        header = Sm4Header.from_buffer(cursor)
+        self.file_header = Sm4FileHeader.from_buffer(cursor)
+        self.file_header.read_objects(cursor)
+        page_index_header = self.file_header.page_index_header
 
-        page_index_header = Sm4PageIndexHeader.from_buffer(
-            cursor, header.object_list
-        )
-
-        page_index_array_offset = None
-        for obj in page_index_header.object_list:
-            if obj.obj_type == RhkObjectType.RHK_OBJECT_PAGE_INDEX_ARRAY:
-                page_index_array_offset = obj.offset
-                break
-        if page_index_array_offset is None:
-            raise BufferError("No page index array in buffer")
+        page_index_array_offset = page_index_header.page_index_array_offset()
         cursor.set_position(page_index_array_offset)
 
         self.pages: List[Sm4Page] = []
@@ -693,6 +715,7 @@ class Sm4File:
 
             else:
                 page_header = Sm4PageHeaderDefault.from_buffer(cursor)
+                page_header.read_data(cursor)
 
             page.add_header(page_header)
             page.read_data(cursor)
