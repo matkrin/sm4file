@@ -3,6 +3,7 @@ name = "sm4file"
 version = "0.1.0"
 description = "Python package to read .sm4 files"
 authors = ["matkrin <matkrin@protonmail.com>"]
+license = "BSD-3-Clause"
 readme = "README.md"
 
 [tool.poetry.dependencies]
