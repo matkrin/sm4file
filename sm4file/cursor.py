@@ -17,11 +17,11 @@ class Cursor:
 
     def read_string(self, str_len: int) -> str:
         """Read bytes as string from _bytes with str_len"""
-        return "".join([chr(i) for i in self._buffer.read(str_len)])
+        return "".join([chr(i).rstrip("\x00") for i in self._buffer.read(str_len)])
 
     def read_sm4_string(self) -> str:
         length = self.read_u16_le()
-        return self.read_string(length)
+        return self.read_string(length * 2)
 
     def read_u8_le(self) -> int:
         return struct.unpack("<B", self._buffer.read(1))[0]

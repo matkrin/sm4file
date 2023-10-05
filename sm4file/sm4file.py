@@ -654,7 +654,6 @@ class Sm4Page:
         self.header = header
 
     def read_data(self, cursor: Cursor) -> None:
-        tiptrack_info_count = None
         for obj in self.object_list:
             if (
                 obj.offset != 0
@@ -719,3 +718,6 @@ class Sm4File:
 
             page.add_header(page_header)
             page.read_data(cursor)
+
+        from rich import print
+        print(self.pages)

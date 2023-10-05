@@ -171,48 +171,56 @@ class StringData:
 
     @classmethod
     def from_buffer(cls, cursor: Cursor, count: int) -> StringData:
-        for i in range(count):
-            print(cursor.read_sm4_string())
-        """ label = cursor.read_sm4_string() """
-        """ system_text = cursor.read_sm4_string() """
-        """ session_text = cursor.read_sm4_string() """
-        """ user_text = cursor.read_sm4_string() """
-        """ filename = cursor.read_sm4_string() """
-        """ date = cursor.read_sm4_string() """
-        """ time = cursor.read_sm4_string() """
-        """ x_units = cursor.read_sm4_string() """
-        """ y_units = cursor.read_sm4_string() """
-        """ z_units = cursor.read_sm4_string() """
-        """ x_label = cursor.read_sm4_string() """
-        """ y_label = cursor.read_sm4_string() """
-        """ status_channel_text = cursor.read_sm4_string() """
-        """ completed_line_count = cursor.read_sm4_string() """
-        """ oversampling_count = cursor.read_sm4_string() """
-        """ sliced_voltage = cursor.read_sm4_string() """
-        """ pll_pro_status = cursor.read_sm4_string() """
-        """ setpoint_unit = cursor.read_sm4_string() """
-        """ channel_list = cursor.read_sm4_string() """
+        strings = [cursor.read_sm4_string() for _ in range(count)]
+
+        label = strings[0]
+        system_text = strings[1]
+        session_text = strings[2]
+        user_text = strings[3]
+        filename = strings[4]
+        date = strings[5]
+        time = strings[6]
+        x_units = strings[7]
+        y_units = strings[8]
+        z_units = strings[9]
+        x_label = strings[10]
+        y_label = strings[11]
+        status_channel_text = strings[12]
+        completed_line_count = strings[13]
+        try:
+            oversampling_count = strings[14]
+            sliced_voltage = strings[15]
+            pll_pro_status = strings[16]
+            setpoint_unit = strings[17]
+            channel_list = strings[18]
+        except IndexError:
+            oversampling_count = ""
+            sliced_voltage = ""
+            pll_pro_status = ""
+            setpoint_unit = ""
+            channel_list = ""
+
 
         return cls(
-            label="",
-            system_text="",
-            session_text="",
-            user_text="",
-            filename="",
-            date="",
-            time="",
-            x_units="",
-            y_units="",
-            z_units="",
-            x_label="",
-            y_label="",
-            status_channel_text="",
-            completed_line_count="",
-            oversampling_count="",
-            sliced_voltage="",
-            pll_pro_status="",
-            setpoint_unit="",
-            channel_list="",
+            label,
+            system_text,
+            session_text,
+            user_text,
+            filename,
+            date,
+            time,
+            x_units,
+            y_units,
+            z_units,
+            x_label,
+            y_label,
+            status_channel_text,
+            completed_line_count,
+            oversampling_count,
+            sliced_voltage,
+            pll_pro_status,
+            setpoint_unit,
+            channel_list,
         )
 
 
