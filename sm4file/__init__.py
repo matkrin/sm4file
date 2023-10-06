@@ -38,6 +38,7 @@ class Sm4Channel:
 class Sm4:
     def __init__(self, filepath: str):
         sm4file = Sm4File(filepath)
+        self.prm = sm4file.file_header.prm.prm_data
         self.channels: List[Sm4Channel] = []
         for ch in sm4file.pages:
             if isinstance(ch.header, Sm4PageHeaderDefault):
@@ -74,3 +75,7 @@ class Sm4:
 
     def __delitem__(self, idx: int) -> None:
         del self.channels[idx]
+
+    def save_prm(self, out_file) -> None:
+        with open(out_file, "w") as f:
+            f.write(self.prm)

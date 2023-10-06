@@ -720,4 +720,4 @@ class Sm4File:
             page.read_data(cursor)
 
         from rich import print
-        print(self.pages)
+        print(self.file_header.prm.prm_data.split("\t"))
