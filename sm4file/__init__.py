@@ -6,6 +6,8 @@ from datetime import datetime
 import numpy as np
 from numpy._typing import NDArray
 
+from sm4file.page_types import StringData
+
 from .sm4file import (
     Sm4File,
     RhkPageType,
@@ -41,7 +43,7 @@ class Sm4Channel:
 class Sm4:
     def __init__(self, filepath: str):
         sm4file = Sm4File(filepath)
-        self.prm = sm4file.file_header.prm.prm_data
+        self.prm_str = sm4file.file_header.prm.prm_data
         self.channels: List[Sm4Channel] = []
         for ch in sm4file.pages:
             if isinstance(ch.header, Sm4PageHeaderDefault):
@@ -96,4 +98,11 @@ class Sm4:
 
     def save_prm(self, out_file) -> None:
         with open(out_file, "w") as f:
-            f.write(self.prm)
+            f.write(self.prm_str)
+
+    def topography_channels(self) -> List[Sm4Channel]:
+        return [ch for ch in self if ch.page_type == RhkPageType.RHK_PAGE_TOPOGRAPHIC]
+
+    def current_channels(self) -> List[Sm4Channel]:
+        return [ch for ch in self if ch.page_type == RhkPageType.RHK_PAGE_CURRENT]
+
