@@ -48,18 +48,20 @@ class Sm4:
         for ch in sm4file.pages:
             if isinstance(ch.header, Sm4PageHeaderDefault):
                 ch_datetime = None
-                for i in ch.header.additional_page_objects:
+                for i in ch.header.page_header_objects:
                     if type(i) == StringData:
                         month, day, year = i.date.split("/")
                         year = "20" + year
                         month, day, year = int(month), int(day), int(year)
                         hour, min, sec = [int(x) for x in i.time.split(":")]
-                        ch_datetime = datetime(year, month, day, hour, min, sec)
+                        ch_datetime = datetime(
+                            year, month, day, hour, min, sec
+                        )
 
                 # fallback to file stats
                 if ch_datetime is None:
-                        file_datetime = Path(filepath).stat().st_ctime
-                        ch_datetime = datetime.fromtimestamp(file_datetime)
+                    file_datetime = Path(filepath).stat().st_ctime
+                    ch_datetime = datetime.fromtimestamp(file_datetime)
 
                 self.channels.append(
                     Sm4Channel(
@@ -101,8 +103,13 @@ class Sm4:
             f.write(self.prm_str)
 
     def topography_channels(self) -> List[Sm4Channel]:
-        return [ch for ch in self if ch.page_type == RhkPageType.RHK_PAGE_TOPOGRAPHIC]
+        return [
+            ch
+            for ch in self
+            if ch.page_type == RhkPageType.RHK_PAGE_TOPOGRAPHIC
+        ]
 
     def current_channels(self) -> List[Sm4Channel]:
-        return [ch for ch in self if ch.page_type == RhkPageType.RHK_PAGE_CURRENT]
-
+        return [
+            ch for ch in self if ch.page_type == RhkPageType.RHK_PAGE_CURRENT
+        ]
