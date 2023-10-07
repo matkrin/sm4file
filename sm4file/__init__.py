@@ -1,5 +1,7 @@
 from dataclasses import dataclass
+from pathlib import Path
 from typing import List
+from datetime import datetime
 
 import numpy as np
 from numpy._typing import NDArray
@@ -18,6 +20,7 @@ from .sm4file import (
 class Sm4Channel:
     page_type: RhkPageType
     line_type: RhkLineType
+    datetime: datetime
     xres: int
     yres: int
     image_type: RhkImageType
@@ -42,10 +45,25 @@ class Sm4:
         self.channels: List[Sm4Channel] = []
         for ch in sm4file.pages:
             if isinstance(ch.header, Sm4PageHeaderDefault):
+                ch_datetime = None
+                for i in ch.header.additional_page_objects:
+                    if type(i) == StringData:
+                        month, day, year = i.date.split("/")
+                        year = "20" + year
+                        month, day, year = int(month), int(day), int(year)
+                        hour, min, sec = [int(x) for x in i.time.split(":")]
+                        ch_datetime = datetime(year, month, day, hour, min, sec)
+
+                # fallback to file stats
+                if ch_datetime is None:
+                        file_datetime = Path(filepath).stat().st_ctime
+                        ch_datetime = datetime.fromtimestamp(file_datetime)
+
                 self.channels.append(
                     Sm4Channel(
                         page_type=ch.header.page_type,
                         line_type=ch.header.line_type,
+                        datetime=ch_datetime,
                         xres=ch.header.x_size,
                         yres=ch.header.y_size,
                         image_type=ch.header.image_type,
