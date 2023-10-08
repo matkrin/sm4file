@@ -6,7 +6,7 @@ from datetime import datetime
 import numpy as np
 from numpy._typing import NDArray
 
-from sm4file.page_types import StringData
+from .sm4_object_types import StringData
 
 from .sm4file import (
     Sm4File,
@@ -88,6 +88,9 @@ class Sm4:
 
     def __repr__(self):
         return repr(self.channels)
+
+    def __len__(self):
+        return len(self.channels)
 
     def __getitem__(self, idx: int) -> Sm4Channel:
         return self.channels[idx]

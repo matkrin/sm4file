@@ -5,7 +5,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 
 from .cursor import Cursor
-from .page_types import (
+from .sm4_object_types import (
     ApiInfo,
     ImageDriftHeader,
     ImageDriftData,
