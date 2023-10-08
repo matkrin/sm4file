@@ -22,7 +22,7 @@ jobs:
       - name: Install and configure Poetry
         uses: abatilo/actions-poetry@v2
       - name: Install dependencies
-        run: poetry install --extras test
+        run: poetry install
       # - name: Format check with black
       #   run: |
       #     source $VENV
