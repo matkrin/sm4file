@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from pathlib import Path
-from typing import List
+from typing import Iterator, List
 from datetime import datetime
 
 import numpy as np
@@ -50,9 +50,13 @@ class Sm4:
                 ch_datetime = None
                 for i in ch.header.page_header_objects:
                     if type(i) == StringData:
-                        month, day, year = i.date.split("/")
-                        year = "20" + year
-                        month, day, year = int(month), int(day), int(year)
+                        month_str, day_str, year_str = i.date.split("/")
+                        year_str = "20" + year_str
+                        month, day, year = (
+                            int(month_str),
+                            int(day_str),
+                            int(year_str),
+                        )
                         hour, min, sec = [int(x) for x in i.time.split(":")]
                         ch_datetime = datetime(
                             year, month, day, hour, min, sec
@@ -86,10 +90,10 @@ class Sm4:
                     )
                 )
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return repr(self.channels)
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.channels)
 
     def __getitem__(self, idx: int) -> Sm4Channel:
@@ -101,7 +105,10 @@ class Sm4:
     def __delitem__(self, idx: int) -> None:
         del self.channels[idx]
 
-    def save_prm(self, out_file) -> None:
+    def __iter__(self) -> Iterator[Sm4Channel]:
+        return iter(self.channels)
+
+    def save_prm(self, out_file: str) -> None:
         with open(out_file, "w") as f:
             f.write(self.prm_str)
 

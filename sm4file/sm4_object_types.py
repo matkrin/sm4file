@@ -200,7 +200,6 @@ class StringData:
             setpoint_unit = ""
             channel_list = ""
 
-
         return cls(
             label,
             system_text,
@@ -295,7 +294,13 @@ class Prm:
     prm_data: str
 
     @classmethod
-    def from_buffer(cls, cursor: Cursor, prm_compression_flag: int, prm_data_size: int, prm_compression_size: int) -> Prm:
+    def from_buffer(
+        cls,
+        cursor: Cursor,
+        prm_compression_flag: int,
+        prm_data_size: int,
+        prm_compression_size: int,
+    ) -> Prm:
         if prm_compression_flag == 0:
             prm_data_raw = cursor.read(prm_data_size)
         else:

@@ -29,4 +29,5 @@ line-length = 79
 preview = true
 
 [tool.mypy]
+strict = true
 show_error_codes = true

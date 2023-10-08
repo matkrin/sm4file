@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import List, Union, TypeAlias, Optional
+from typing import List, Union, Optional
 from io import BufferedReader
 from dataclasses import dataclass, field
 from enum import Enum
@@ -27,9 +27,11 @@ from .sm4_object_types import (
     LowpassFilterInfo,
 )
 
-FileHeaderObject: TypeAlias = Union[Prm, PrmHeader]
+# TypeAlias
+FileHeaderObject = Union[Prm, PrmHeader]
 
-PageHeaderObject: TypeAlias = Union[
+# TypeAlias
+PageHeaderObject = Union[
     ApiInfo,
     ImageDriftHeader,
     ImageDriftData,
@@ -48,7 +50,8 @@ PageHeaderObject: TypeAlias = Union[
     LowpassFilterInfo,
 ]
 
-# PageObject: TypeAlias = Union[
+# TypeAlias
+# PageObject = Union[
 #     PageData,
 #     Thumbnail,
 #      ThumbnailHeader,
@@ -202,7 +205,7 @@ class Sm4Object:
     size: int
 
     @classmethod
-    def from_buffer(cls, cursor: Cursor):
+    def from_buffer(cls, cursor: Cursor) -> Sm4Object:
         object_type_id = RhkObjectType(cursor.read_u32_le())
         offset = cursor.read_u32_le()
         size = cursor.read_u32_le()
@@ -304,6 +307,8 @@ class Sm4PageIndexHeader:
         for obj in self.object_list:
             if obj.obj_type == RhkObjectType.RHK_OBJECT_PAGE_INDEX_ARRAY:
                 return obj.offset
+        else:
+            raise BufferError("No Page Index Array found")
 
 
 @dataclass
@@ -469,7 +474,7 @@ class Sm4PageHeaderDefault:
             object_list,
         )
 
-    def read_data(self, cursor) -> None:
+    def read_data(self, cursor: Cursor) -> None:
         tiptrack_info_count = None
         for obj in self.object_list:
             if obj.offset != 0 and obj.size != 0:
@@ -614,7 +619,8 @@ class Sm4PageHeaderDefault:
                     )
 
 
-Sm4PageHeader: TypeAlias = Union[Sm4PageHeaderSequential, Sm4PageHeaderDefault]
+# TypeAlias
+Sm4PageHeader = Union[Sm4PageHeaderSequential, Sm4PageHeaderDefault]
 
 
 @dataclass
@@ -688,13 +694,14 @@ class Sm4File:
         with open(filepath, "rb") as f:
             self._read_sm4_file(f)
 
-    def _read_sm4_file(self, f: BufferedReader):
+    def _read_sm4_file(self, f: BufferedReader) -> None:
         cursor = Cursor(f)
         self.file_header = Sm4FileHeader.from_buffer(cursor)
         self.file_header.read_objects(cursor)
         page_index_header = self.file_header.page_index_header
 
         page_index_array_offset = page_index_header.page_index_array_offset()
+        assert page_index_array_offset
         cursor.set_position(page_index_array_offset)
 
         self.pages: List[Sm4Page] = []

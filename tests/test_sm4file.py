@@ -34,8 +34,8 @@ def test_iv():
     s = Sm4(str(TEST_IV))
     print(s)
     assert len(s) == 5
-    assert(len(s.topography_channels())) == 0
-    assert(len(s.current_channels())) == 0
+    assert len(s.topography_channels()) == 0
+    assert len(s.current_channels()) == 0
     for ch in s:
         assert ch.page_type == RhkPageType.RHK_PAGE_RAMP_SPECTROSCOPY_RP
         assert ch.line_type == RhkLineType.RHK_LINE_IV_SPECTRUM
