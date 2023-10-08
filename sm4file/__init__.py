@@ -8,7 +8,7 @@ from numpy._typing import NDArray
 
 from .sm4_object_types import StringData
 
-from .sm4file import (
+from .sm4_file import (
     Sm4File,
     RhkPageType,
     RhkLineType,
@@ -72,8 +72,8 @@ class Sm4:
                         yres=ch.header.y_size,
                         image_type=ch.header.image_type,
                         scan_type=ch.header.scan_type,
-                        xsize=ch.header.x_scale * ch.header.x_size,
-                        ysize=ch.header.y_scale * ch.header.y_size,
+                        xsize=abs(ch.header.x_scale * ch.header.x_size),
+                        ysize=abs(ch.header.y_scale * ch.header.y_size),
                         z_scale=ch.header.z_scale,
                         x_offset=ch.header.x_offset,
                         y_offset=ch.header.y_offset,
