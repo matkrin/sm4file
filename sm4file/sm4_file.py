@@ -4,6 +4,8 @@ from io import BufferedReader
 from dataclasses import dataclass, field
 from enum import Enum
 
+import numpy as np
+
 from .cursor import Cursor
 from .sm4_object_types import (
     ApiInfo,
@@ -750,3 +752,26 @@ class Sm4File:
             page.add_header(page_header)
             page.read_label()
             page.read_data(cursor)
+
+        self.arrange_data()
+
+    def arrange_data(self) -> None:
+        for page in self.pages:
+            if type(page.header) == Sm4PageHeaderDefault:
+                page.data.data = page.data.data.reshape(
+                    page.header.y_size, page.header.x_size
+                )
+
+                if page.page_data_type == RhkPageDataType.RHK_DATA_IMAGE:
+                    if page.header.x_scale < 0:
+                        page.data.data = np.flip(page.data.data, axis=1)
+                    if page.header.y_scale > 0:
+                        page.data.data = np.flip(page.data.data, axis=0)
+
+                elif page.page_data_type == RhkPageDataType.RHK_DATA_LINE:
+                    x_values = (
+                        np.arange(page.header.x_size) * page.header.x_scale
+                        + page.header.x_offset
+                    )
+                    y_values_arr = page.data.data.transpose()
+                    page.data.data = np.column_stack((x_values, y_values_arr))
