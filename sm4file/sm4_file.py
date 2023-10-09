@@ -197,6 +197,18 @@ class RhkScanType(Enum):
     RHK_SCAN_UP = 2
     RHK_SCAN_DOWN = 3
 
+    def direction(self) -> str:
+        if self == RhkScanType.RHK_SCAN_RIGHT:
+            return "right"
+        elif self == RhkScanType.RHK_SCAN_LEFT:
+            return "left"
+        elif self == RhkScanType.RHK_SCAN_UP:
+            return "up"
+        elif self == RhkScanType.RHK_SCAN_DOWN:
+            return "down"
+        else:
+            return "unknown"
+
 
 @dataclass
 class Sm4Object:
