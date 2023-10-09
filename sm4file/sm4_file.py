@@ -643,6 +643,7 @@ class Sm4Page:
 
     header: Sm4PageHeader = field(init=False)
     data: PageData = field(init=False)
+    label: str = field(init=False)
     page_id: int
     page_data_type: RhkPageDataType
     page_source_type: RhkPageSourceType
@@ -699,6 +700,12 @@ class Sm4Page:
                 elif obj.obj_type == RhkObjectType.RHK_OBJECT_THUMBNAIL_HEADER:
                     pass
 
+    def read_label(self) -> None:
+        if type(self.header) == Sm4PageHeaderDefault:
+            for obj in self.header.page_header_objects:
+                if type(obj) == StringData:
+                    self.label = obj.label
+
 
 class Sm4File:
     def __init__(self, filepath: str):
@@ -741,4 +748,5 @@ class Sm4File:
                 page_header.read_data(cursor)
 
             page.add_header(page_header)
+            page.read_label()
             page.read_data(cursor)
