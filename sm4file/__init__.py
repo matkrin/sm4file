@@ -20,6 +20,28 @@ from .sm4_file import (
 
 @dataclass()
 class Sm4Channel:
+    """Class with information about a channel
+
+    page_type: Type of page/channel
+    line_type: Type of line
+    datetime: Datetime of measurement
+    xres: Resolution in x, e.g. number of pixels
+    yres: Resolution in y, e.g. number of pixels
+    image_type: Type of image
+    scan_type: Type of scan
+    xsize: Physical size of e.g. image in x (in m)
+    ysize: Physical size of e.g. image in y (in m)
+    z_scale:
+    x_offset:
+    y_offset:
+    z_offset:
+    period: Acquisition time of a single data point (in s)
+    bias: Bias voltage (in V)
+    current: Tunneling current (in A)
+    angle: Scan angle (in deg)
+    data: Mesuremet data
+    """
+
     page_type: RhkPageType
     line_type: RhkLineType
     datetime: datetime
