@@ -5,6 +5,7 @@ description = "Python package to read .sm4 files"
 authors = ["matkrin <matkrin@protonmail.com>"]
 license = "BSD-3-Clause"
 readme = "README.md"
+exclude = ["tests/test_files/*"]
 
 [tool.poetry.dependencies]
 python = "<3.13,>=3.9"
