@@ -42,6 +42,7 @@ class Sm4Channel:
     data: Mesuremet data
     """
 
+    label: str
     page_type: RhkPageType
     line_type: RhkLineType
     datetime: datetime
@@ -91,6 +92,7 @@ class Sm4:
 
                 self.channels.append(
                     Sm4Channel(
+                        label=ch.label,
                         page_type=ch.header.page_type,
                         line_type=ch.header.line_type,
                         datetime=ch_datetime,
