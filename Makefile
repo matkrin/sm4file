@@ -1,3 +1,5 @@
+default: test typecheck format
+
 test:
 	poetry run pytest
 typecheck:
