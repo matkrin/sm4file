@@ -709,7 +709,7 @@ class Sm4Page:
                     self.label = obj.label
 
 
-class Sm4File:
+class Sm4FileAll:
     def __init__(self, filepath: str):
         self.filepath = filepath
         with open(filepath, "rb") as f:
@@ -753,9 +753,9 @@ class Sm4File:
             page.read_label()
             page.read_data(cursor)
 
-        self.arrange_data()
+        self._arrange_data()
 
-    def arrange_data(self) -> None:
+    def _arrange_data(self) -> None:
         for page in self.pages:
             if type(page.header) == Sm4PageHeaderDefault:
                 page.data.data = page.data.data.reshape(
