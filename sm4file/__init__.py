@@ -9,7 +9,7 @@ from numpy._typing import NDArray
 from .sm4_object_types import StringData
 
 from .sm4_file import (
-    Sm4File,
+    Sm4FileAll,
     RhkPageType,
     RhkLineType,
     RhkImageType,
@@ -25,10 +25,11 @@ class Sm4Channel:
     page_type: Type of page/channel
     line_type: Type of line
     datetime: Datetime of measurement
-    xres: Resolution in x, e.g. number of pixels
-    yres: Resolution in y, e.g. number of pixels
+    xres: Resolution in x, e.g. number of pixels for images
+    yres: Resolution in y, e.g. number of pixels for images
     image_type: Type of image
     scan_type: Type of scan
+    scan_direction: Direction of scanning
     xsize: Physical size of e.g. image in x (in m)
     ysize: Physical size of e.g. image in y (in m)
     z_scale:
@@ -50,6 +51,7 @@ class Sm4Channel:
     yres: int
     image_type: RhkImageType
     scan_type: RhkScanType
+    scan_direction: str
     xsize: float
     ysize: float
     z_scale: float
@@ -65,9 +67,10 @@ class Sm4Channel:
 
 class Sm4:
     def __init__(self, filepath: str):
-        sm4file = Sm4File(filepath)
+        self.filepath = filepath
+        sm4file = Sm4FileAll(filepath)
         self.prm_str = sm4file.file_header.prm.prm_data
-        self.channels: List[Sm4Channel] = []
+        self._channels: List[Sm4Channel] = []
         for ch in sm4file.pages:
             if isinstance(ch.header, Sm4PageHeaderDefault):
                 ch_datetime = None
@@ -90,7 +93,7 @@ class Sm4:
                     file_datetime = Path(filepath).stat().st_ctime
                     ch_datetime = datetime.fromtimestamp(file_datetime)
 
-                self.channels.append(
+                self._channels.append(
                     Sm4Channel(
                         label=ch.label,
                         page_type=ch.header.page_type,
@@ -100,6 +103,7 @@ class Sm4:
                         yres=ch.header.y_size,
                         image_type=ch.header.image_type,
                         scan_type=ch.header.scan_type,
+                        scan_direction=ch.header.scan_type.direction(),
                         xsize=abs(ch.header.x_scale * ch.header.x_size),
                         ysize=abs(ch.header.y_scale * ch.header.y_size),
                         z_scale=ch.header.z_scale,
@@ -115,22 +119,22 @@ class Sm4:
                 )
 
     def __repr__(self) -> str:
-        return repr(self.channels)
+        return repr(self._channels)
 
     def __len__(self) -> int:
-        return len(self.channels)
+        return len(self._channels)
 
     def __getitem__(self, idx: int) -> Sm4Channel:
-        return self.channels[idx]
+        return self._channels[idx]
 
     def __setitem__(self, idx: int, item: Sm4Channel) -> None:
-        self.channels[idx] = item
+        self._channels[idx] = item
 
     def __delitem__(self, idx: int) -> None:
-        del self.channels[idx]
+        del self._channels[idx]
 
     def __iter__(self) -> Iterator[Sm4Channel]:
-        return iter(self.channels)
+        return iter(self._channels)
 
     def save_prm(self, out_file: str) -> None:
         with open(out_file, "w") as f:
