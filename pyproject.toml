@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "sm4file"
-version = "0.1.0"
+version = "0.1.0a1"
 description = "Python package to read .sm4 files"
 authors = ["matkrin <matkrin@protonmail.com>"]
 license = "BSD-3-Clause"
