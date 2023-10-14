@@ -22,25 +22,26 @@ from .sm4_file import (
 class Sm4Channel:
     """Class with information about a channel
 
-    page_type: Type of page/channel
-    line_type: Type of line
-    datetime: Datetime of measurement
-    xres: Resolution in x, e.g. number of pixels for images
-    yres: Resolution in y, e.g. number of pixels for images
-    image_type: Type of image
-    scan_type: Type of scan
-    scan_direction: Direction of scanning
-    xsize: Physical size of e.g. image in x (in m)
-    ysize: Physical size of e.g. image in y (in m)
-    z_scale:
-    x_offset:
-    y_offset:
-    z_offset:
-    period: Acquisition time of a single data point (in s)
-    bias: Bias voltage (in V)
-    current: Tunneling current (in A)
-    angle: Scan angle (in deg)
-    data: Mesuremet data
+    Attributes:
+        page_type: Type of page/channel
+        line_type: Type of line
+        datetime: Datetime of measurement
+        xres: Resolution in x, e.g. number of pixels for images
+        yres: Resolution in y, e.g. number of pixels for images
+        image_type: Type of image
+        scan_type: Type of scan
+        scan_direction: Direction of scanning
+        xsize: Physical size of e.g. image in x (in m)
+        ysize: Physical size of e.g. image in y (in m)
+        z_scale:
+        x_offset:
+        y_offset:
+        z_offset:
+        period: Acquisition time of a single data point (in s)
+        bias: Bias voltage (in V)
+        current: Tunneling current (in A)
+        angle: Scan angle (in deg)
+        data: Mesuremet data
     """
 
     label: str

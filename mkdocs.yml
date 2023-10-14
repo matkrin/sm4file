@@ -1,0 +1,19 @@
+site_name: sm4file
+site_description: Python library for reading RHK .sm4 files.
+site_url: https://matkrin.github.io/sm4file
+
+theme:
+  name: "material"
+
+repo_name: matkrin/sm4file
+repo_url: https://github.com/matkrin/sm4file
+
+nav:
+- API Documentation: api.md
+
+plugins:
+- search
+- mkdocstrings:
+    handlers:
+      python:
+        paths: [.]
