@@ -61,6 +61,8 @@ PageHeaderObject = Union[
 
 
 class RhkPageDataType(Enum):
+    """Types of Page Data"""
+
     RHK_DATA_IMAGE = 0
     RHK_DATA_LINE = 1
     RHK_DATA_XY_DATA = 2
@@ -72,6 +74,8 @@ class RhkPageDataType(Enum):
 
 
 class RhkObjectType(Enum):
+    """Types of Objects"""
+
     RHK_OBJECT_UNDEFINED = 0
     RHK_OBJECT_PAGE_INDEX_HEADER = 1
     RHK_OBJECT_PAGE_INDEX_ARRAY = 2
@@ -107,6 +111,8 @@ class RhkObjectType(Enum):
 
 
 class RhkPageSourceType(Enum):
+    """Types of Page Source"""
+
     RHK_SOURCE_RAW = 0
     RHK_SOURCE_PROCESSED = 1
     RHK_SOURCE_CALCULATED = 2
@@ -114,6 +120,8 @@ class RhkPageSourceType(Enum):
 
 
 class RhkPageType(Enum):
+    """Types of Pages"""
+
     RHK_PAGE_UNDEFINED = 0
     RHK_PAGE_TOPOGRAPHIC = 1
     RHK_PAGE_CURRENT = 2
@@ -157,6 +165,8 @@ class RhkPageType(Enum):
 
 
 class RhkLineType(Enum):
+    """Types of lines"""
+
     RHK_LINE_NOT_A_LINE = 0
     RHK_LINE_HISTOGRAM = 1
     RHK_LINE_CROSS_SECTION = 2
@@ -189,17 +199,22 @@ class RhkLineType(Enum):
 
 
 class RhkImageType(Enum):
+    """Types of Images"""
+
     RHK_IMAGE_NORMAL = 0
     RHK_IMAGE_AUTOCORRELATED = 1
 
 
 class RhkScanType(Enum):
+    """Types of Scans"""
+
     RHK_SCAN_RIGHT = 0
     RHK_SCAN_LEFT = 1
     RHK_SCAN_UP = 2
     RHK_SCAN_DOWN = 3
 
     def direction(self) -> str:
+        """Get the scan direction as string"""
         if self == RhkScanType.RHK_SCAN_RIGHT:
             return "right"
         elif self == RhkScanType.RHK_SCAN_LEFT:
@@ -214,12 +229,19 @@ class RhkScanType(Enum):
 
 @dataclass
 class Sm4Object:
+    """Class for indentifying an Object"""
+
     obj_type: RhkObjectType
     offset: int
     size: int
 
     @classmethod
     def from_buffer(cls, cursor: Cursor) -> Sm4Object:
+        """Creates a [`Sm4Object`][sm4file.sm4_file.Sm4Object] from a buffer
+
+        Args:
+            cursor: [`Cursor`][sm4file.cursor.Cursor] holding the buffer
+        """
         object_type_id = RhkObjectType(cursor.read_u32_le())
         offset = cursor.read_u32_le()
         size = cursor.read_u32_le()
@@ -228,7 +250,10 @@ class Sm4Object:
 
 @dataclass
 class Sm4FileHeader:
-    """Its object_list contains PAGE_INDEX_ARRAY, PRM, PRM_HEADER"""
+    """Class representing the file header of a SM4-file
+
+    Its object_list contains PAGE_INDEX_ARRAY, PRM, PRM_HEADER
+    """
 
     size: int
     signature: str
@@ -242,6 +267,11 @@ class Sm4FileHeader:
 
     @classmethod
     def from_buffer(cls, cursor: Cursor) -> Sm4FileHeader:
+        """Creates a [`Sm4Object`][sm4file.sm4_file.Sm4Object] from a buffer
+
+        Args:
+            cursor: [`Cursor`][sm4file.cursor.Cursor] holding the buffer
+        """
         size = cursor.read_u16_le()
         signature = cursor.read_string(36)
         page_count = cursor.read_u32_le()
@@ -267,8 +297,12 @@ class Sm4FileHeader:
         )
 
     def read_objects(self, cursor: Cursor) -> None:
-        """Read PRM header first"""
-
+        """Read the objects of [`Sm4FileHeader`s][sm4file.sm4_file.Sm4FileHeader]
+        into the fields [`page_index_header`][sm4file.sm4_file.Sm4FileHeader.page_index_header],
+        [`prm_header`][sm4file.sm4_file.Sm4FileHeader.prm_header] and
+        [`prm_prm`][sm4file.sm4_file.Sm4FileHeader.prm]
+        """
+        # read the PRM header first
         self.read_prm_header(cursor)
         if self.prm_header is None:
             raise BufferError("No PRM header in file header")

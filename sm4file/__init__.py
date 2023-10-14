@@ -20,7 +20,7 @@ from .sm4_file import (
 
 @dataclass()
 class Sm4Channel:
-    """Class with information about a channel
+    """Class holding the information about a channel
 
     Attributes:
         page_type: Type of page/channel
@@ -34,14 +34,14 @@ class Sm4Channel:
         xsize: Physical size of e.g. image in x (in m)
         ysize: Physical size of e.g. image in y (in m)
         z_scale:
-        x_offset:
-        y_offset:
+        x_offset: Offset in x-direction
+        y_offset: Offset in y-direction
         z_offset:
         period: Acquisition time of a single data point (in s)
         bias: Bias voltage (in V)
         current: Tunneling current (in A)
         angle: Scan angle (in deg)
-        data: Mesuremet data
+        data: Measuremet data
     """
 
     label: str
@@ -67,6 +67,16 @@ class Sm4Channel:
 
 
 class Sm4:
+    """Main class representing the content of a .sm4 filepath
+
+    Contains all channels of the file as [`Sm4Channel`s][sm4file.Sm4Channel].
+    To access the channels, the instantiated object can be indexed or iterated
+    over, like a list.
+
+    Args:
+        filepath: SM4-file to read
+    """
+
     def __init__(self, filepath: str):
         self.filepath = filepath
         sm4file = Sm4FileAll(filepath)
@@ -138,10 +148,16 @@ class Sm4:
         return iter(self._channels)
 
     def save_prm(self, out_file: str) -> None:
+        """Save file parameters as text file
+
+        Args:
+            out_file: Name of file that is created
+        """
         with open(out_file, "w") as f:
             f.write(self.prm_str)
 
     def topography_channels(self) -> List[Sm4Channel]:
+        """Get only topographic channels"""
         return [
             ch
             for ch in self
@@ -149,6 +165,7 @@ class Sm4:
         ]
 
     def current_channels(self) -> List[Sm4Channel]:
+        """Get only current channels"""
         return [
             ch for ch in self if ch.page_type == RhkPageType.RHK_PAGE_CURRENT
         ]
