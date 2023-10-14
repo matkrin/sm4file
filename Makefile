@@ -10,3 +10,7 @@ format-check:
 	poetry run black --check .
 format:
 	poetry run black .
+docs-serve:
+	poetry run mkdocs serve
+docs-build:
+	poetry run mkdocs build
