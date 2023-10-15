@@ -32,29 +32,3 @@ it is a (n, m) where n is the number of acquired data points and m is the
 number of spectra + 1.
 The array's first column contains the x-values and all subsequent ones the
 corresponding y-values.
-
-
-#### Plot images from all channels
-
-```python
-import matplotlib.pyplot as plt
-
-
-for channel in sm4:
-    plt.imshow(channel.data)
-    plt.title(f"{channel.label} - {channel.scan_direction}")
-    plt.show()
-```
-  
-
-#### Plot all spectra, e.g. IV
-
-```python
-for channel in sm4:
-    for i in range(1, len(channel.data[0])):
-        plt.plot(channel.data[:, 0], channel.data[:, i], label=f"{i}")
-        plt.title(channel.label)
-        plt.legend()
-
-    plt.show()
-```

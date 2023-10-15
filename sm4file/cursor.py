@@ -30,6 +30,9 @@ class Cursor:
 
         Args:
             num_bytes: Number of bytes to read
+
+        Returns:
+            bytes: The read bytes
         """
         return self._buffer.read(num_bytes)
 
@@ -38,6 +41,9 @@ class Cursor:
 
         Args:
             str_len: Length of the string to read
+
+        Returns:
+            The read string
         """
         return "".join(
             [chr(i).rstrip("\x00") for i in self._buffer.read(str_len)]
@@ -47,38 +53,73 @@ class Cursor:
         """Read bytes as a UTF-16 encoded string. In SM4-files string data
         always contains the length of the string as a u16 number, followed
         by the string itself
+
+        Returns:
+            The read string
         """
         length = self.read_u16_le()
         return self.read_string(length * 2)
 
     def read_u8_le(self) -> int:
-        """Read a 8-bit unsigned integer"""
+        """Read a 8-bit unsigned integer
+
+        Returns:
+            The read integer
+        """
         return cast(int, struct.unpack("<B", self._buffer.read(1))[0])
 
     def read_u16_le(self) -> int:
-        """Read a 16-bit unsigned integer"""
+        """Read a 16-bit unsigned integer
+
+        Returns:
+            The read integer
+        """
         return cast(int, struct.unpack("<H", self._buffer.read(2))[0])
 
     def read_i16_le(self) -> int:
-        """Read a 16-bit signed integer"""
+        """Read a 16-bit signed integer
+
+        Returns:
+            The read integer
+        """
         return cast(int, struct.unpack("<h", self._buffer.read(2))[0])
 
     def read_u32_le(self) -> int:
-        """Read a 32-bit unsigned integer"""
+        """Read a 32-bit unsigned integer
+
+        Returns:
+            The read integer
+        """
         return cast(int, struct.unpack("<I", self._buffer.read(4))[0])
 
     def read_i32_le(self) -> int:
-        """Read a 32-bit signed integer"""
+        """Read a 32-bit signed integer
+
+        Returns:
+            The read integer
+        """
         return cast(int, struct.unpack("<i", self._buffer.read(4))[0])
 
     def read_u64_le(self) -> int:
-        """Read a 64-bit unsigned integer"""
+        """Read a 64-bit unsigned integer
+
+        Returns:
+            The read integer
+        """
         return cast(int, struct.unpack("<q", self._buffer.read(8))[0])
 
     def read_f32_le(self) -> float:
-        """Read a 64-bit floating point number"""
+        """Read a 64-bit floating point number
+
+        Returns:
+            The read float
+        """
         return cast(float, struct.unpack("<f", self._buffer.read(4))[0])
 
     def read_f64_le(self) -> float:
-        """Read a 64-bit floating point number"""
+        """Read a 64-bit floating point number
+
+        Returns:
+            The read float
+        """
         return cast(float, struct.unpack("<d", self._buffer.read(8))[0])

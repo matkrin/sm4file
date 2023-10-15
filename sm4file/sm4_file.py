@@ -241,6 +241,9 @@ class Sm4Object:
 
         Args:
             cursor: [`Cursor`][sm4file.cursor.Cursor] holding the buffer
+
+        Returns:
+            The parsed [`Sm4Object`][sm4file.sm4_file.Sm4Object]
         """
         object_type_id = RhkObjectType(cursor.read_u32_le())
         offset = cursor.read_u32_le()
@@ -271,6 +274,9 @@ class Sm4FileHeader:
 
         Args:
             cursor: [`Cursor`][sm4file.cursor.Cursor] holding the buffer
+
+        Returns:
+            The parsed [`Sm4FileHeader`][sm4file.sm4_file.Sm4FileHeader]
         """
         size = cursor.read_u16_le()
         signature = cursor.read_string(36)
@@ -298,9 +304,10 @@ class Sm4FileHeader:
 
     def read_objects(self, cursor: Cursor) -> None:
         """Read the objects of [`Sm4FileHeader`s][sm4file.sm4_file.Sm4FileHeader]
-        into the fields [`page_index_header`][sm4file.sm4_file.Sm4FileHeader.page_index_header],
-        [`prm_header`][sm4file.sm4_file.Sm4FileHeader.prm_header] and
-        [`prm_prm`][sm4file.sm4_file.Sm4FileHeader.prm]
+        into the fields `page_index_header`, `prm_header` and `prm`
+
+        Args:
+            cursor: [`Cursor`][sm4file.cursor.Cursor] holding the buffer
         """
         # read the PRM header first
         self.read_prm_header(cursor)
@@ -323,6 +330,11 @@ class Sm4FileHeader:
                 )
 
     def read_prm_header(self, cursor: Cursor) -> None:
+        """Read the PRM Header into the `prm_header` field
+
+        Args:
+            cursor: [`Cursor`][sm4file.cursor.Cursor] holding the buffer
+        """
         for obj in self.object_list:
             if obj.obj_type == RhkObjectType.RHK_OBJECT_PRM_HEADER:
                 cursor.set_position(obj.offset)
@@ -331,6 +343,8 @@ class Sm4FileHeader:
 
 @dataclass
 class Sm4PageIndexHeader:
+    """Class representing the Page Index Header"""
+
     offset: int
     page_count: int
     object_list_count: int
@@ -338,6 +352,15 @@ class Sm4PageIndexHeader:
 
     @classmethod
     def from_buffer(cls, cursor: Cursor, offset: int) -> Sm4PageIndexHeader:
+        """Read the Page Index Header from a buffer
+
+        Args:
+            cursor: [`Cursor`][sm4file.cursor.Cursor] holding the buffer
+            offset: Offset of the Page Index Header
+
+        Returns:
+            The parsed [`Sm4PageIndexHeader`][sm4file.sm4_file.Sm4PageIndexHeader]
+        """
         page_count = cursor.read_u32_le()
         object_list_count = cursor.read_u32_le()
         _reserved_1 = cursor.read_u32_le()  # pyright: ignore
@@ -352,6 +375,14 @@ class Sm4PageIndexHeader:
         )
 
     def page_index_array_offset(self) -> Optional[int]:
+        """Finds the offset of the Page Index Header in the object list
+
+        Returns:
+            The offset of the Page Index Header
+
+        Raises:
+            BufferError: If no Page Index Array can be found in the buffer
+        """
         for obj in self.object_list:
             if obj.obj_type == RhkObjectType.RHK_OBJECT_PAGE_INDEX_ARRAY:
                 return obj.offset
@@ -361,6 +392,8 @@ class Sm4PageIndexHeader:
 
 @dataclass
 class Sm4PageHeaderSequential:
+    """Class representing a sequential Page Header"""
+
     data_type: int
     data_length: int
     param_count: int
@@ -371,6 +404,14 @@ class Sm4PageHeaderSequential:
 
     @classmethod
     def from_buffer(cls, cursor: Cursor) -> Sm4PageHeaderSequential:
+        """Read a sequential Page Header from a buffer
+
+        Args:
+            cursor: [`Cursor`][sm4file.cursor.Cursor] holding the buffer
+
+        Returns:
+            The parsed [`Sm4PageHeaderSequential`][sm4file.sm4_file.Sm4PageHeaderSequential]
+        """
         data_type = cursor.read_u32_le()
         data_length = cursor.read_u32_le()
         param_count = cursor.read_u32_le()
@@ -403,6 +444,8 @@ class Sm4PageHeaderSequential:
 
 @dataclass
 class Sm4PageHeaderDefault:
+    """Class representing a default Page Header"""
+
     string_count: int
     page_type: RhkPageType
     data_sub_source: int
@@ -438,6 +481,14 @@ class Sm4PageHeaderDefault:
 
     @classmethod
     def from_buffer(cls, cursor: Cursor) -> Sm4PageHeaderDefault:
+        """Read a default Page Header from a buffer
+
+        Args:
+            cursor: [`Cursor`][sm4file.cursor.Cursor] holding the buffer
+
+        Returns:
+            The parsed [`Sm4PageHeaderDefault`][sm4file.sm4_file.Sm4PageHeaderSequential]
+        """
         _ = cursor.read_u16_le()
         string_count = cursor.read_u16_le()
         page_type = RhkPageType(cursor.read_u32_le())
@@ -523,6 +574,11 @@ class Sm4PageHeaderDefault:
         )
 
     def read_data(self, cursor: Cursor) -> None:
+        """Read the objects of the object_list into page_header_objects
+
+        Args:
+            cursor: [`Cursor`][sm4file.cursor.Cursor] holding the buffer
+        """
         tiptrack_info_count = None
         for obj in self.object_list:
             if obj.offset != 0 and obj.size != 0:
@@ -669,11 +725,13 @@ class Sm4PageHeaderDefault:
 
 # TypeAlias
 Sm4PageHeader = Union[Sm4PageHeaderSequential, Sm4PageHeaderDefault]
+"""Type for the Page Header"""
 
 
 @dataclass
 class Sm4Page:
-    """Its object_list contains PAGE_HEADER, PAGE_DATA, THUMBNAIL and
+    """Class representing a Page in an SM4-file
+    Its object_list contains PAGE_HEADER, PAGE_DATA, THUMBNAIL and
     THUMBNAIL_HEADER
     """
 
@@ -690,6 +748,14 @@ class Sm4Page:
 
     @classmethod
     def from_buffer(cls, cursor: Cursor) -> Sm4Page:
+        """Read a Page from a buffer
+
+        Args:
+            cursor: [`Cursor`][sm4file.cursor.Cursor] holding the buffer
+
+        Returns:
+            The parsed [`Sm4Page`][sm4file.sm4_file.Sm4Page]
+        """
         page_id = cursor.read_u16_le()
         cursor.skip(14)
         page_data_type = RhkPageDataType(cursor.read_u32_le())
@@ -711,9 +777,23 @@ class Sm4Page:
         )
 
     def add_header(self, header: Sm4PageHeader) -> None:
+        """Adds a [`Sm4PageHeader`][sm4file.sm4_file.Sm4PageHeader] to the page
+
+        Args:
+            header: The [`Sm4PageHeader`][sm4file.sm4_file.Sm4PageHeader] to
+                be added
+        """
         self.header = header
 
     def read_data(self, cursor: Cursor) -> None:
+        """Read the Page's Page Data of the `objects_list` into `data`
+
+        Todo:
+            Parsing of the Thumbnail data is not supported
+
+        Args:
+            cursor: [`Cursor`][sm4file.cursor.Cursor] holding the buffer
+        """
         for obj in self.object_list:
             if (
                 obj.offset != 0
@@ -737,6 +817,9 @@ class Sm4Page:
                     pass
 
     def read_label(self) -> None:
+        """Reads the Page's label from the Header's
+        [`StringData`][sm4file.sm4_object_types.StringData] into `label`
+        """
         if type(self.header) == Sm4PageHeaderDefault:
             for obj in self.header.page_header_objects:
                 if type(obj) == StringData:
@@ -744,12 +827,39 @@ class Sm4Page:
 
 
 class Sm4FileAll:
+    """Class representing an entire SM4-file
+
+    The file is constructed in the following hierarchy:
+    File
+        File Header
+            Page Index Header
+                with information about the offset of Page Index Array
+                with information about the number of Pages
+            PRM Header
+            PRM Data
+        List of Pages
+
+
+    Args:
+        filepath: The SM4-file to be parsed
+
+    Attributes:
+        filepath: The SM4-file to be parsed
+        file_header: The file's header
+        pages: The files pages. A page is measurement channel
+    """
+
     def __init__(self, filepath: str):
         self.filepath = filepath
         with open(filepath, "rb") as f:
-            self._read_sm4_file(f)
+            self.read_sm4_file(f)
 
-    def _read_sm4_file(self, f: BufferedReader) -> None:
+    def read_sm4_file(self, f: BufferedReader) -> None:
+        """Main function for parsing a SM4-file
+
+        Args:
+            f: File buffer of the file to parse
+        """
         cursor = Cursor(f)
         self.file_header = Sm4FileHeader.from_buffer(cursor)
         self.file_header.read_objects(cursor)
@@ -787,9 +897,15 @@ class Sm4FileAll:
             page.read_label()
             page.read_data(cursor)
 
-        self._arrange_data()
+        self.arrange_data()
 
-    def _arrange_data(self) -> None:
+    def arrange_data(self) -> None:
+        """Arrange the data array depending on type of the Page
+
+        - if Image: arrange that 2D array starts with upper left pixel
+        - if Line: arrange array with first column for x-values and following
+            columns y-values
+        """
         for page in self.pages:
             if type(page.header) == Sm4PageHeaderDefault:
                 page.data.data = page.data.data.reshape(

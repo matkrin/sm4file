@@ -11,6 +11,8 @@ from .cursor import Cursor
 
 
 class RhkDriftOptionType(Enum):
+    """Enum of Drift Options"""
+
     RHK_DRIFT_DISABLED = 0
     RHK_DRIFT_EACH_SPECTRA = 1
     RHK_DRIFT_EACH_LOCATION = 2
@@ -18,12 +20,26 @@ class RhkDriftOptionType(Enum):
 
 @dataclass
 class PageData:
+    """Class for the measured data points"""
+
     data: NDArray[np.float32]
 
     @classmethod
     def from_buffer(
         cls, cursor: Cursor, size: int, z_scale: float, z_offset: float
     ) -> PageData:
+        """Read the buffer's bytes into a
+        [`PageData`][sm4file.sm4_object_types.PageData]
+
+        Args:
+            cursor: [`Cursor`][sm4file.cursor.Cursor] holding the buffer
+            size: Number of bytes to read
+            z_scale: Scaling factor of data
+            z_offset: Offset of data
+
+        Returns:
+            The parsed [`PageData`][sm4file.sm4_object_types.PageData]
+        """
         # cursor.set_position(offset)
 
         raw_data = np.frombuffer(cursor.read(size), dtype=np.int32)
@@ -33,11 +49,22 @@ class PageData:
 
 @dataclass
 class ImageDriftHeader:
+    """Class for Image Drift Header"""
+
     imagedrift_filetime: int
     imagedrift_drift_option_type: RhkDriftOptionType
 
     @classmethod
     def from_buffer(cls, cursor: Cursor) -> ImageDriftHeader:
+        """Read the buffer's bytes into a
+        [`ImageDriftHeader`][sm4file.sm4_object_types.ImageDriftHeader]
+
+        Args:
+            cursor: [`Cursor`][sm4file.cursor.Cursor] holding the buffer
+
+        Returns:
+            The parsed [`ImageDriftHeader`][sm4file.sm4_object_types.ImageDriftHeader]
+        """
         imagedrift_filetime = cursor.read_u64_le()
         imagedrift_drift_option_type = RhkDriftOptionType(cursor.read_u32_le())
 
@@ -46,6 +73,8 @@ class ImageDriftHeader:
 
 @dataclass
 class ImageDriftData:
+    """Class for Image Drift Data"""
+
     imagedrift_time: int
     imagedrift_dx: int
     imagedrift_dy: int
@@ -56,6 +85,15 @@ class ImageDriftData:
 
     @classmethod
     def from_buffer(cls, cursor: Cursor) -> ImageDriftData:
+        """Read the buffer's bytes into a
+        [`ImageDriftData`][sm4file.sm4_object_types.ImageDriftData]
+
+        Args:
+            cursor: [`Cursor`][sm4file.cursor.Cursor] holding the buffer
+
+        Returns:
+            The parsed [`ImageDriftData`][sm4file.sm4_object_types.ImageDriftData]
+        """
         imagedrift_time = cursor.read_u32_le()
         imagedrift_dx = cursor.read_u32_le()
         imagedrift_dy = cursor.read_u32_le()
@@ -77,6 +115,8 @@ class ImageDriftData:
 
 @dataclass
 class SpecDriftHeader:
+    """Class for Spec Drift Header"""
+
     specdrift_filetime: int
     specdrift_drift_option_type: int
     specdrift_drift_option_type_name: str
@@ -84,6 +124,15 @@ class SpecDriftHeader:
 
     @classmethod
     def from_buffer(cls, cursor: Cursor) -> SpecDriftHeader:
+        """Read the buffer's bytes into a
+        [`SpecDriftHeader`][sm4file.sm4_object_types.SpecDriftHeader]
+
+        Args:
+            cursor: [`Cursor`][sm4file.cursor.Cursor] holding the buffer
+
+        Returns:
+            The parsed [`SpecDriftHeader`][sm4file.sm4_object_types.SpecDriftHeader]
+        """
         # unix epoch
         specdrift_filetime = cursor.read_u64_le()
         specdrift_drift_option_type = cursor.read_u32_le()
@@ -109,6 +158,8 @@ class SpecDriftHeader:
 
 @dataclass
 class SpecDriftData:
+    """Class for Spec Drift Data"""
+
     specdrift_time: List[float]
     specdrift_x_coord: List[float]
     specdrift_y_coord: List[float]
@@ -119,6 +170,15 @@ class SpecDriftData:
 
     @classmethod
     def from_buffer(cls, cursor: Cursor, y_size: int) -> SpecDriftData:
+        """Read the buffer's bytes into a
+        [`SpecDriftData`][sm4file.sm4_object_types.SpecDriftData]
+
+        Args:
+            cursor: [`Cursor`][sm4file.cursor.Cursor] holding the buffer
+
+        Returns:
+            The parsed [`SpecDriftData`][sm4file.sm4_object_types.SpecDriftData]
+        """
         specdrift_time: List[float] = []
         specdrift_x_coord: List[float] = []
         specdrift_y_coord: List[float] = []
@@ -149,6 +209,8 @@ class SpecDriftData:
 
 @dataclass
 class StringData:
+    """Class for String Data"""
+
     label: str
     system_text: str
     session_text: str
@@ -171,6 +233,15 @@ class StringData:
 
     @classmethod
     def from_buffer(cls, cursor: Cursor, count: int) -> StringData:
+        """Read the buffer's bytes into a
+        [`StringData`][sm4file.sm4_object_types.StringData]
+
+        Args:
+            cursor: [`Cursor`][sm4file.cursor.Cursor] holding the buffer
+
+        Returns:
+            The parsed [`StringData`][sm4file.sm4_object_types.StringData]
+        """
         strings = [cursor.read_sm4_string() for _ in range(count)]
 
         label = strings[0]
@@ -225,6 +296,8 @@ class StringData:
 
 @dataclass
 class TipTrackHeader:
+    """Class for Tip Track Header"""
+
     tiptrack_filetime: int
     tiptrack_feature_height: float
     tiptrack_feature_width: float
@@ -236,6 +309,15 @@ class TipTrackHeader:
 
     @classmethod
     def from_buffer(cls, cursor: Cursor) -> TipTrackHeader:
+        """Read the buffer's bytes into a
+        [`TipTrackHeader`][sm4file.sm4_object_types.TipTrackHeader]
+
+        Args:
+            cursor: [`Cursor`][sm4file.cursor.Cursor] holding the buffer
+
+        Returns:
+            The parsed [`TipTrackHeader`][sm4file.sm4_object_types.TipTrackHeader]
+        """
         # unix epoch
         tiptrack_filetime = cursor.read_u64_le()
         tiptrack_feature_height = cursor.read_f32_le()
@@ -261,6 +343,8 @@ class TipTrackHeader:
 
 @dataclass
 class TipTrackData:
+    """Class for Tip Track Data"""
+
     tiptrack_cumulative_time: List[float]
     tiptrack_time: List[float]
     tiptrack_dx: List[float]
@@ -268,14 +352,24 @@ class TipTrackData:
 
     @classmethod
     def from_buffer(
-        cls, cursor: Cursor, tiptrack_tiptrack_info_count: int
+        cls, cursor: Cursor, tiptrack_info_count: int
     ) -> TipTrackData:
+        """Read the buffer's bytes into a
+        [`TipTrackData`][sm4file.sm4_object_types.TipTrackData]
+
+        Args:
+            cursor: [`Cursor`][sm4file.cursor.Cursor] holding the buffer
+            tiptrack_info_count: Number of info parameters
+
+        Returns:
+            The parsed [`TipTrackData`][sm4file.sm4_object_types.TipTrackData]
+        """
         tiptrack_cumulative_time: List[float] = []
         tiptrack_time: List[float] = []
         tiptrack_dx: List[float] = []
         tiptrack_dy: List[float] = []
 
-        for _ in range(tiptrack_tiptrack_info_count):
+        for _ in range(tiptrack_info_count):
             tiptrack_cumulative_time.append(cursor.read_f32_le())
             tiptrack_time.append(cursor.read_f32_le())
             tiptrack_dx.append(cursor.read_f32_le())
@@ -291,6 +385,8 @@ class TipTrackData:
 
 @dataclass
 class Prm:
+    """Class for PRM (Parameter) Data"""
+
     prm_data: str
 
     @classmethod
@@ -301,6 +397,18 @@ class Prm:
         prm_data_size: int,
         prm_compression_size: int,
     ) -> Prm:
+        """Read the buffer's bytes into a
+        [`Prm`][sm4file.sm4_object_types.Prm]
+
+        Args:
+            cursor: [`Cursor`][sm4file.cursor.Cursor] holding the buffer
+            prm_compression_flag: Indicates if PRM is compressed
+            prm_data_size: Size of the PRM data in bytes
+            prm_compression_size: Size of the PRM data in bytes if compressed
+
+        Returns:
+            The parsed [`Prm`][sm4file.sm4_object_types.Prm]
+        """
         if prm_compression_flag == 0:
             prm_data_raw = cursor.read(prm_data_size)
         else:
@@ -316,12 +424,23 @@ class Prm:
 
 @dataclass
 class PrmHeader:
+    """Class for PRM (Parameter) Header"""
+
     prm_compression_flag: int
     prm_data_size: int
     prm_compression_size: int
 
     @classmethod
     def from_buffer(cls, cursor: Cursor) -> PrmHeader:
+        """Read the buffer's bytes into a
+        [`PrmHeader`][sm4file.sm4_object_types.PrmHeader]
+
+        Args:
+            cursor: [`Cursor`][sm4file.cursor.Cursor] holding the buffer
+
+        Returns:
+            The parsed [`PrmHeader`][sm4file.sm4_object_types.PrmHeader]
+        """
         prm_compression_flag = cursor.read_u32_le()
         prm_data_size = cursor.read_u32_le()
         prm_compression_size = cursor.read_u32_le()
@@ -337,6 +456,8 @@ class PrmHeader:
 
 @dataclass
 class ApiInfo:
+    """Class for API Info"""
+
     voltage_high: float
     voltage_low: float
     gain: float
@@ -352,6 +473,15 @@ class ApiInfo:
 
     @classmethod
     def from_buffer(cls, cursor: Cursor) -> ApiInfo:
+        """Read the buffer's bytes into a
+        [`ApiInfo`][sm4file.sm4_object_types.ApiInfo]
+
+        Args:
+            cursor: [`Cursor`][sm4file.cursor.Cursor] holding the buffer
+
+        Returns:
+            The parsed [`ApiInfo`][sm4file.sm4_object_types.ApiInfo]
+        """
         voltage_high = cursor.read_f32_le()
         voltage_low = cursor.read_f32_le()
         gain = cursor.read_f32_le()
@@ -386,6 +516,8 @@ class ApiInfo:
 
 @dataclass
 class PiezoSensitivity:
+    """Class for Piezo Sensitivity"""
+
     tube_x: float
     tube_y: float
     tube_z: float
@@ -408,6 +540,15 @@ class PiezoSensitivity:
 
     @classmethod
     def from_buffer(cls, cursor: Cursor) -> PiezoSensitivity:
+        """Read the buffer's bytes into a
+        [`PiezoSensitivity`][sm4file.sm4_object_types.PiezoSensitivity]
+
+        Args:
+            cursor: [`Cursor`][sm4file.cursor.Cursor] holding the buffer
+
+        Returns:
+            The parsed [`PiezoSensitivity`][sm4file.sm4_object_types.PiezoSensitivity]
+        """
         tube_x = cursor.read_f64_le()
         tube_y = cursor.read_f64_le()
         tube_z = cursor.read_f64_le()
@@ -456,6 +597,8 @@ class PiezoSensitivity:
 
 @dataclass
 class FrequencySweepData:
+    """Class for Frequency Sweep Data"""
+
     psd_total_signal: float
     peak_frequency: float
     peak_amplitude: float
@@ -471,6 +614,15 @@ class FrequencySweepData:
 
     @classmethod
     def from_buffer(cls, cursor: Cursor) -> FrequencySweepData:
+        """Read the buffer's bytes into a
+        [`FrequencySweepData`][sm4file.sm4_object_types.FrequencySweepData]
+
+        Args:
+            cursor: [`Cursor`][sm4file.cursor.Cursor] holding the buffer
+
+        Returns:
+            The parsed [`FrequencySweepData`][sm4file.sm4_object_types.FrequencySweepData]
+        """
         psd_total_signal = cursor.read_f64_le()
         peak_frequency = cursor.read_f64_le()
         peak_amplitude = cursor.read_f64_le()
@@ -505,6 +657,8 @@ class FrequencySweepData:
 
 @dataclass
 class ScanProcessorInfo:
+    """Class for Scan Processor Info"""
+
     x_slope_compensation: float
     y_slope_compensation: float
     x_slope_compensation_unit: str
@@ -512,6 +666,15 @@ class ScanProcessorInfo:
 
     @classmethod
     def from_buffer(cls, cursor: Cursor) -> ScanProcessorInfo:
+        """Read the buffer's bytes into a
+        [`ScanProcessorInfo`][sm4file.sm4_object_types.ScanProcessorInfo]
+
+        Args:
+            cursor: [`Cursor`][sm4file.cursor.Cursor] holding the buffer
+
+        Returns:
+            The parsed [`ScanProcessorInfo`][sm4file.sm4_object_types.ScanProcessorInfo]
+        """
         x_slope_compensation = cursor.read_f64_le()
         y_slope_compensation = cursor.read_f64_le()
         _ = cursor.read_u32_le()
@@ -528,6 +691,8 @@ class ScanProcessorInfo:
 
 @dataclass
 class PllInfo:
+    """Class for PLL Info"""
+
     amplitude_control: int
     drive_amplitude: float
     drive_ref_frequency: float
@@ -559,6 +724,15 @@ class PllInfo:
 
     @classmethod
     def from_buffer(cls, cursor: Cursor) -> PllInfo:
+        """Read the buffer's bytes into a
+        [`PllInfo`][sm4file.sm4_object_types.PllInfo]
+
+        Args:
+            cursor: [`Cursor`][sm4file.cursor.Cursor] holding the buffer
+
+        Returns:
+            The parsed [`PllInfo`][sm4file.sm4_object_types.PllInfo]
+        """
         amplitude_control = cursor.read_u32_le()
         drive_amplitude = cursor.read_f64_le()
         drive_ref_frequency = cursor.read_f64_le()
@@ -624,6 +798,8 @@ class PllInfo:
 
 @dataclass
 class ChannelDriveInfo:
+    """Class for Channel Drive Info"""
+
     master_osciallator: int
     amplitude: float
     frequency: float
@@ -636,6 +812,15 @@ class ChannelDriveInfo:
 
     @classmethod
     def from_buffer(cls, cursor: Cursor) -> ChannelDriveInfo:
+        """Read the buffer's bytes into a
+        [`ChannelDriveInfo`][sm4file.sm4_object_types.ChannelDriveInfo]
+
+        Args:
+            cursor: [`Cursor`][sm4file.cursor.Cursor] holding the buffer
+
+        Returns:
+            The parsed [`ChannelDriveInfo`][sm4file.sm4_object_types.ChannelDriveInfo]
+        """
         _ = cursor.read_u32_le()
         master_osciallator = cursor.read_u32_le()
         amplitude = cursor.read_f64_le()
@@ -662,6 +847,8 @@ class ChannelDriveInfo:
 
 @dataclass
 class LockinInfo:
+    """Class for Lockin Info"""
+
     num_strings: int
     non_master_oscillator: int
     frequency: float
@@ -674,6 +861,15 @@ class LockinInfo:
 
     @classmethod
     def from_buffer(cls, cursor: Cursor) -> LockinInfo:
+        """Read the buffer's bytes into a
+        [`LockinInfo`][sm4file.sm4_object_types.LockinInfo]
+
+        Args:
+            cursor: [`Cursor`][sm4file.cursor.Cursor] holding the buffer
+
+        Returns:
+            The parsed [`LockinInfo`][sm4file.sm4_object_types.LockinInfo]
+        """
         num_strings = cursor.read_u32_le()
 
         non_master_oscillator = cursor.read_u32_le()
@@ -699,6 +895,8 @@ class LockinInfo:
 
 @dataclass
 class PiControllerInfo:
+    """Class for PI Controller Info"""
+
     setpoint: float
     proportional_gain: float
     integral_gain: float
@@ -712,6 +910,15 @@ class PiControllerInfo:
 
     @classmethod
     def from_buffer(cls, cursor: Cursor) -> PiControllerInfo:
+        """Read the buffer's bytes into a
+        [`PiControllerInfo`][sm4file.sm4_object_types.PiControllerInfo]
+
+        Args:
+            cursor: [`Cursor`][sm4file.cursor.Cursor] holding the buffer
+
+        Returns:
+            The parsed [`PiControllerInfo`][sm4file.sm4_object_types.PiControllerInfo]
+        """
         setpoint = cursor.read_f64_le()
         proportional_gain = cursor.read_f64_le()
         integral_gain = cursor.read_f64_le()
@@ -740,10 +947,21 @@ class PiControllerInfo:
 
 @dataclass
 class LowpassFilterInfo:
+    """Class for Lowpass Filter Info"""
+
     info: str
 
     @classmethod
     def from_buffer(cls, cursor: Cursor) -> LowpassFilterInfo:
+        """Read the buffer's bytes into a
+        [`LowpassFilterInfo`][sm4file.sm4_object_types.LowpassFilterInfo]
+
+        Args:
+            cursor: [`Cursor`][sm4file.cursor.Cursor] holding the buffer
+
+        Returns:
+            The parsed [`LowpassFilterInfo`][sm4file.sm4_object_types.LowpassFilterInfo]
+        """
         _ = cursor.read_u32_le()
         lowpass_filter_info = cursor.read_sm4_string()
 

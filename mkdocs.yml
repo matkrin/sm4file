@@ -10,8 +10,12 @@ repo_url: https://github.com/matkrin/sm4file
 
 nav:
 - Home: index.md
-- User API: api-user.md
-- Developer API: api-dev.md
+- Examples: examples.md
+- API Reference: api-user.md
+- For Developers:
+  - Cursor: api-dev/cursor.md
+  - Sm4File: api-dev/sm4_file_all.md
+  - Object type: api-dev/sm4_object_types.md
 
 plugins:
 - search
