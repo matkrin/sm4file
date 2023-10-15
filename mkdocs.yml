@@ -4,6 +4,24 @@ site_url: https://matkrin.github.io/sm4file
 
 theme:
   name: "material"
+  features:
+    - content.code.copy
+  palette:
+    # Palette toggle for light mode
+    - media: "(prefers-color-scheme: light)"
+      primary: blue
+      scheme: default
+      toggle:
+        icon: material/lightbulb
+        name: Switch to dark mode
+
+    # Palette toggle for dark mode
+    - media: "(prefers-color-scheme: dark)"
+      primary: blue
+      scheme: slate
+      toggle:
+        icon: material/lightbulb-outline
+        name: Switch to light mode
 
 repo_name: matkrin/sm4file
 repo_url: https://github.com/matkrin/sm4file
@@ -23,3 +41,13 @@ plugins:
     handlers:
       python:
         paths: [.]
+
+
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
