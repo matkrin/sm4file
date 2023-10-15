@@ -829,17 +829,6 @@ class Sm4Page:
 class Sm4FileAll:
     """Class representing an entire SM4-file
 
-    The file is constructed in the following hierarchy:
-    File
-        File Header
-            Page Index Header
-                with information about the offset of Page Index Array
-                with information about the number of Pages
-            PRM Header
-            PRM Data
-        List of Pages
-
-
     Args:
         filepath: The SM4-file to be parsed
 
