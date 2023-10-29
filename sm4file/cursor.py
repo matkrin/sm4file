@@ -58,7 +58,7 @@ class Cursor:
             The read string
         """
         length = self.read_u16_le()
-        return self.read_string(length * 2)
+        return self.read_string(length * 2).strip()
 
     def read_u8_le(self) -> int:
         """Read a 8-bit unsigned integer

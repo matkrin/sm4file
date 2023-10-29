@@ -13,7 +13,7 @@ TEST_IV = testfiles_path / "test_iv.SM4"
 TEST_STM_4_CH = testfiles_path / "test_stm_4ch.SM4"
 
 
-def test_stm_10ch():
+def test_stm_10ch() -> None:
     s = Sm4(str(TEST_STM_10_CH))
     assert len(s) == 10
     topo = s.topography_channels()
@@ -31,10 +31,14 @@ def test_stm_10ch():
         assert ch.angle == 116.0
         assert ch.datetime == datetime(2020, 1, 8, 14, 13, 11)
 
+    labels = [ch.label for ch in s]
+    assert "VEC" in labels
+    assert "IEC" in labels
+    assert "Utun" in labels
 
-def test_iv():
+
+def test_iv() -> None:
     s = Sm4(str(TEST_IV))
-    print(s)
     assert len(s) == 5
     assert len(s.topography_channels()) == 0
     assert len(s.current_channels()) == 0
@@ -51,7 +55,7 @@ def test_iv():
         assert ch.angle == 0.0
 
 
-def test_stm_4ch():
+def test_stm_4ch() -> None:
     s = Sm4(str(TEST_STM_4_CH))
     assert len(s) == 4
     topo = s.topography_channels()
@@ -59,7 +63,6 @@ def test_stm_4ch():
     curr = s.current_channels()
     assert len(curr) == 2
     for i, ch in enumerate(s):
-        print(s)
         assert ch.datetime == datetime(2023, 7, 18, 13, 30, 24)
         assert ch.xres == 512
         assert ch.yres == 512
